@@ -1,0 +1,2 @@
+ input_pdf_file = "C:/Users/TICK/Downloads/Shruti Balasa - CSS Flex _ Grid_Tailwind CSS.pdf"
+    output_folder_path = "C:/Users/TICK/Desktop/PDF"  
