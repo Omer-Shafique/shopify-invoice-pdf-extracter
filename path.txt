@@ -1,2 +1,6 @@
+<<<<<<< HEAD
  input_pdf_file = "C:/Users/TICK/Downloads/Shruti Balasa - CSS Flex _ Grid_Tailwind CSS.pdf"
+=======
+ input_pdf_file = "C:/Users/TICK/Downloads/Shruti Balasa - CSS Flex _ Grid_Tailwind CSS.pdf"
+>>>>>>> 62c2b46334358494b1336265938589525f5453f1
     output_folder_path = "C:/Users/TICK/Desktop/PDF"  
