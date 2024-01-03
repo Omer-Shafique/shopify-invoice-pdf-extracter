@@ -29,11 +29,26 @@ def extract_info_from_page(page_text):
     customer_name = None
 
     if bill_to_match:
-        customer_name = bill_to_match.group(1).strip()
+        customer_name = clean_customer_name(bill_to_match.group(1).strip())
     elif ship_to_match:
-        customer_name = ship_to_match.group(1).strip()
+        customer_name = clean_customer_name(ship_to_match.group(1).strip())
 
     return cleaned_phone_number, customer_name if customer_name else 'name not found', message
+
+def clean_customer_name(raw_name):
+    # Split the raw name into words
+    words = raw_name.split()
+
+    # Remove repeated names
+    unique_words = []
+    for word in words:
+        if word.lower() not in unique_words:
+            unique_words.append(word.lower())
+
+    # Join the cleaned words back into a string
+    cleaned_name = ' '.join(unique_words)
+    return cleaned_name
+
 
 def split_pdf(input_pdf, output_folder):
     pdf_reader = PyPDF2.PdfReader(input_pdf)
