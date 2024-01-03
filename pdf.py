@@ -14,11 +14,7 @@ def extract_invoice_number(page_text):
 def extract_info_from_page(page_text):
     # Extract phone number and message from the text
     phone_number_match = re.search(r'(?:(?:\+\d{1,2}\s?)|0)?(\d{10})', page_text)
-    if phone_number_match:
-        raw_phone_number = phone_number_match.group(1)
-        cleaned_phone_number = '3' + raw_phone_number[-9:]
-    else:
-        cleaned_phone_number = ''
+    phone_number = phone_number_match.group(1) if phone_number_match else ''
 
     message = "Hello, here is your order invoice"
 
@@ -33,7 +29,7 @@ def extract_info_from_page(page_text):
     elif ship_to_match:
         customer_name = clean_customer_name(ship_to_match.group(1).strip())
 
-    return cleaned_phone_number, customer_name if customer_name else 'name not found', message
+    return phone_number, customer_name if customer_name else 'name not found', message
 
 def clean_customer_name(raw_name):
     # Split the raw name into words
@@ -85,10 +81,10 @@ def split_pdf(input_pdf, output_folder):
                     pdf_writer.add_page(pdf_reader.pages[page_number])
 
             if pdf_writer:
-                with open(output_pdf, "wb") as output_file:
-                    pdf_writer.write(output_file)
+                    with open(output_pdf, "wb") as output_file:
+                        pdf_writer.write(output_file)
 
-                csv_writer.writerow([phone_number, customer_name, message, output_pdf])
+                    csv_writer.writerow([phone_number, customer_name, message, output_pdf])
 
         messagebox.showinfo("Success", "PDFs distributed successfully in the desired folder and CSV file.")
     except Exception as e:
