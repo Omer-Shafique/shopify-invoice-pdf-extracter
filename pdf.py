@@ -39,7 +39,7 @@ def extract_info_from_page(page_text):
     return phone_number, customer_name, message
 
 
-
+ 
 def clean_customer_name(raw_name):
     # Split the raw name into words
     words = raw_name.split()
@@ -65,7 +65,7 @@ def split_pdf(input_pdf, output_folder):
         return
 
     try:
-        with open(csv_file_path, 'w', newline='') as csvfile:
+        with open(csv_file_path, 'w', newline='', encoding='utf-8-sig', errors='replace') as csvfile:
             csv_writer = csv.writer(csvfile)
             csv_writer.writerow(['Phone Number', 'Customer Name', 'Message', 'PDF Path'])
 
