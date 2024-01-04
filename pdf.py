@@ -14,18 +14,15 @@ def extract_invoice_number(page_text):
     return match.group(1) if match else None
 
 def extract_info_from_page(page_text):
-    # Extract phone number and message from the text
+    # Extract phone number
     phone_number_match = re.search(r'(?:(?:\+\d{1,2}\s?)|0)?(\d{9,12})', page_text)
-    phone_number = phone_number_match.group(1) if phone_number_match else ''
+    phone_number = phone_number_match.group(1) if phone_number_match else None
 
-    if not phone_number:
-        # If the first pattern doesn't match, try another pattern
-        phone_number_match = re.search(r'\b\d{3}[-.\s]?\d{4}[-.\s]?\d{4}\b', page_text)
-        phone_number = phone_number_match.group(0) if phone_number_match else ''
+    # Extract message
+    message_match = re.search(r'Hello, here is your order invoice', page_text)
+    message = "Hello, here is your order invoice" if message_match else None
 
-    message = "Hello, here is your order invoice"
-
-    # Extract the customer name after "BILL TO" and "SHIP TO"
+    # Extract customer name from "BILL TO" and "SHIP TO" sections
     bill_to_match = re.search(r'BILL TO[^\n]*\n(.*?)(?=\n)', page_text, re.DOTALL)
     ship_to_match = re.search(r'SHIP TO[^\n]*\n(.*?)(?=\n)', page_text, re.DOTALL)
 
@@ -36,21 +33,29 @@ def extract_info_from_page(page_text):
     elif ship_to_match:
         customer_name = clean_customer_name(ship_to_match.group(1).strip())
 
-    return phone_number, customer_name, message
+    # Format the phone number
+    formatted_phone_number = format_phone_number(phone_number) if phone_number else None
+
+    return formatted_phone_number, customer_name, message
+
+def format_phone_number(phone_number):
+    # Remove non-digit characters and format the number
+    cleaned_number = re.sub(r'\D', '', phone_number) if phone_number else None
+
+    if cleaned_number and len(cleaned_number) >= 10:
+        formatted_number = f"+92 {cleaned_number[-10:-7]} {cleaned_number[-7:-4]} {cleaned_number[-4:]}"
+        return formatted_number
+
+    return None
 
 
- 
+
 def clean_customer_name(raw_name):
-    # Split the raw name into words
     words = raw_name.split()
-
-    # Remove repeated names
     unique_words = []
     for word in words:
         if word.lower() not in unique_words:
             unique_words.append(word.lower())
-
-    # Join the cleaned words back into a string
     cleaned_name = ' '.join(unique_words)
     return cleaned_name
 
