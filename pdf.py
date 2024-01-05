@@ -6,6 +6,7 @@ import tkinter as tk
 from tkinter import filedialog, messagebox
 from ttkthemes import ThemedTk
 import threading
+import phonenumbers
 
 processed_invoices = set()
 
@@ -14,13 +15,12 @@ def extract_invoice_number(page_text):
     return match.group(1) if match else None
 
 def extract_info_from_page(page_text):
-    # Extract phone number
-    phone_number_match = re.search(r'(?:(?:\+\d{1,2}\s?)|0)?(\d{9,12})', page_text)
-    phone_number = phone_number_match.group(1) if phone_number_match else None
-
+    # Extract all phone numbers
+    raw_phone_numbers = re.findall(r'\b\d{9,12}\b', page_text)
+    
     # Extract message
-    message_match = re.search(r'Hello, here is your order invoice', page_text)
-    message = "Hello, here is your order invoice" if message_match else None
+    message_match = re.search(r'This Is Your Invoice', page_text)
+    message = "This Is Your Invoice" if message_match else None
 
     # Extract customer name from "BILL TO" and "SHIP TO" sections
     bill_to_match = re.search(r'BILL TO[^\n]*\n(.*?)(?=\n)', page_text, re.DOTALL)
@@ -32,21 +32,30 @@ def extract_info_from_page(page_text):
         customer_name = clean_customer_name(bill_to_match.group(1).strip())
     elif ship_to_match:
         customer_name = clean_customer_name(ship_to_match.group(1).strip())
+    
+    formatted_phone_numbers = []
+    phone_numbers_included_in_csv = []
 
-    # Format the phone number
-    formatted_phone_number = format_phone_number(phone_number) if phone_number else None
+    for raw_phone_number in raw_phone_numbers:
+        try:
+            parsed_number = phonenumbers.parse(raw_phone_number, None)
+            formatted_phone_numbers.append(phonenumbers.format_number(parsed_number, phonenumbers.PhoneNumberFormat.E164))
+        except Exception as e:
+            phone_numbers_included_in_csv.append(raw_phone_number)
+            print(f"Including phone number: {raw_phone_number}. Exception: {e}")
 
-    return formatted_phone_number, customer_name, message
+    # return formatted_phone_numbers, customer_name, message, phone_numbers_included_in_csv
+    return phone_numbers_included_in_csv, customer_name, message
+
+def write_to_csv(data, filename='output.csv'):
+    with open(filename, 'w', newline='') as csvfile:
+        csv_writer = csv.writer(csvfile)
+        csv_writer.writerow(['Formatted Phone Numbers', 'Customer Name', 'Message', 'Ignored Phone Numbers'])
+        csv_writer.writerow(data)
 
 def format_phone_number(phone_number):
-    # Remove non-digit characters and format the number
-    cleaned_number = re.sub(r'\D', '', phone_number) if phone_number else None
-
-    if cleaned_number and len(cleaned_number) >= 10:
-        formatted_number = f"+92 {cleaned_number[-10:-7]} {cleaned_number[-7:-4]} {cleaned_number[-4:]}"
-        return formatted_number
-
-    return None
+    # Add any additional formatting logic for phone numbers if needed
+    return phone_number
 
 
 
@@ -54,8 +63,9 @@ def clean_customer_name(raw_name):
     words = raw_name.split()
     unique_words = []
     for word in words:
-        if word.lower() not in unique_words:
-            unique_words.append(word.lower())
+        cleaned_word = word.lower().title()  # Convert to title case
+        if cleaned_word not in unique_words:
+            unique_words.append(cleaned_word)
     cleaned_name = ' '.join(unique_words)
     return cleaned_name
 
